@@ -2,6 +2,7 @@
 
 import os
 from dotenv import load_dotenv
+from peewee import PostgresqlDatabase
 
 from telegram.ext import (
     ApplicationBuilder,
@@ -31,6 +32,11 @@ if not TOKEN:
     raise ValueError("TELEGRAM_TOKEN не найден в .env!")
 
 def main():
+    if isinstance(db, PostgresqlDatabase):
+        print("Подключение к PostgreSQL на Render")
+    else:
+        print("Локальная SQLite (для теста)")
+
     db.connect()
     db.create_tables([Listing], safe=True)
     print("База данных готова")

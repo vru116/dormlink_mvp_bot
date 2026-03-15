@@ -1,6 +1,18 @@
 from peewee import *
+import os
 
-db = SqliteDatabase('data/db.sqlite')
+db_url = os.getenv('DATABASE_URL')
+
+if db_url:
+    db = PostgresqlDatabase(
+        database=os.getenv('PGDATABASE', 'render'),
+        user=os.getenv('PGUSER'),
+        password=os.getenv('PGPASSWORD'),
+        host=os.getenv('PGHOST'),
+        port=int(os.getenv('PGPORT', 5432))
+    )
+else:
+    db = SqliteDatabase('data/db.sqlite')
 
 class BaseModel(Model):
     class Meta:
