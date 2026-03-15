@@ -9,10 +9,12 @@ class BaseModel(Model):
 class Listing(BaseModel):
     id = AutoField()
     author_id = IntegerField()
-    dorm = CharField(default="Общежитие 1")  # фиксируем одну общагу для MVP
-    type = CharField()       # 'куплю' или 'продам'
+    dorm = CharField(default="Общежитие 1")
+    type = CharField()
     category = CharField()
     description = TextField()
     contact = CharField()
-    status = CharField(default='активно')  # 'активно' или 'продано'
+    status = CharField(default='активно')
     created_at = DateTimeField(constraints=[SQL('DEFAULT CURRENT_TIMESTAMP')])
+    photo_file_id = CharField(null=True)
+    photo_type = CharField(null=True)
