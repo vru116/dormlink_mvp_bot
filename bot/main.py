@@ -22,6 +22,8 @@ from handlers import (
 )
 
 from models import db, Listing
+from handlers import menu_buttons
+
 
 TYPE, CATEGORY, DESCRIPTION, CONTACT, PHOTO = range(5)
 
@@ -48,14 +50,36 @@ def main():
         states={
             TYPE: [CallbackQueryHandler(type_selected, pattern="^type_")],
             CATEGORY: [CallbackQueryHandler(category_selected, pattern="^cat_")],
-            DESCRIPTION: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_description)],
-            CONTACT: [MessageHandler(filters.TEXT & ~filters.COMMAND, add_contact)],
+            DESCRIPTION: [
+                MessageHandler(
+                    filters.TEXT
+                    & ~filters.COMMAND
+                    & ~filters.Regex("^(➕ Создать|📋 Все|👤 Мои|♻ Сменить общагу|ℹ Помощь)$"),
+                    add_description
+                )
+            ],
+
+            CONTACT: [
+                MessageHandler(
+                    filters.TEXT
+                    & ~filters.COMMAND
+                    & ~filters.Regex("^(➕ Создать|📋 Все|👤 Мои|♻ Сменить общагу|ℹ Помощь)$"),
+                    add_contact
+                )
+            ],
+
             PHOTO: [
                 MessageHandler(filters.PHOTO, add_photo),
                 MessageHandler(filters.Document.ALL, add_photo),
-                MessageHandler(filters.TEXT & ~filters.COMMAND, add_photo),
+                MessageHandler(
+                    filters.TEXT
+                    & ~filters.COMMAND
+                    & ~filters.Regex("^(➕ Создать|📋 Все|👤 Мои|♻ Сменить общагу|ℹ Помощь)$"),
+                    add_photo
+                ),
                 CallbackQueryHandler(add_photo, pattern="^skip_photo$"),
             ],
+
 
         },
         fallbacks=[CommandHandler("cancel", cancel)],
@@ -75,6 +99,12 @@ def main():
     app.add_handler(CommandHandler("buy", buy_listing))
     app.add_handler(CommandHandler("info", info_command))
     app.add_handler(CommandHandler("help", info_command))
+    MENU_FILTER = filters.Regex(
+        "^(➕ Создать|📋 Все|👤 Мои|♻ Сменить общагу|ℹ Помощь)$"
+    )
+
+    app.add_handler(MessageHandler(MENU_FILTER, menu_buttons))
+
 
     print("Бот запущен. Ctrl+C — остановка")
     app.run_polling(allowed_updates=["message", "callback_query"], drop_pending_updates=True)
