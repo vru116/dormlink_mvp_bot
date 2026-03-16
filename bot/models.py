@@ -1,22 +1,22 @@
-from peewee import *
 import os
+from peewee import *
+from playhouse.db_url import connect
+from dotenv import load_dotenv
 
-db_url = os.getenv('DATABASE_URL')
+load_dotenv()
 
-if db_url:
-    db = PostgresqlDatabase(
-        database=os.getenv('PGDATABASE', 'render'),
-        user=os.getenv('PGUSER'),
-        password=os.getenv('PGPASSWORD'),
-        host=os.getenv('PGHOST'),
-        port=int(os.getenv('PGPORT', 5432))
-    )
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    db = connect(DATABASE_URL)
 else:
-    db = SqliteDatabase('data/db.sqlite')
+    db = SqliteDatabase("local.db")
+
 
 class BaseModel(Model):
     class Meta:
         database = db
+        
 
 class Listing(BaseModel):
     id = AutoField()
