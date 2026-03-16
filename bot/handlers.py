@@ -4,9 +4,6 @@ from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, filt
 from models import Listing
 from datetime import datetime
 
-from telegram import ReplyKeyboardMarkup, KeyboardButton
-
-
 TYPE, CATEGORY, DESCRIPTION, CONTACT, PHOTO = range(5)
 
 DORMS = [
@@ -26,11 +23,16 @@ ALLOWED_CATEGORIES = [
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if "dorm" in context.user_data:
         await update.message.reply_text(
-            f"Вы уже выбрали: {context.user_data['dorm']}"
+            f"Вы уже выбрали: {context.user_data['dorm']}\n\n"
+            "Команды:\n"
+            "/add — создать\n"
+            "/list — все\n"
+            "/my — мои\n"
+            "/delete <id>\n"
+            "/buy <id>\n"
+            "/change — сменить общежитие\n"
+            "/info — помощь"
         )
-
-        await send_menu(update, context)
-
 
         return
 
@@ -58,10 +60,16 @@ async def dorm_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dorm = query.data.replace("dorm_", "")
     context.user_data["dorm"] = dorm
     await query.edit_message_text(
-        f"Вы выбрали: {dorm}"
+        f"Вы выбрали: {dorm}\n\n"
+        "Команды:\n"
+        "/add — создать\n"
+        "/list — все\n"
+        "/my — мои\n"
+        "/delete <id>\n"
+        "/buy <id>\n"
+        "/change — сменить общежитие\n"
+        "/info — помощь"
     )
-
-    await send_menu(update, context)
 
 
 
@@ -140,7 +148,6 @@ async def add_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.edit_message_text("Фото пропущено")
 
             dorm = context.user_data.get("dorm")
-
             Listing.create(
                 author_id=update.effective_user.id,
                 dorm=dorm,
@@ -152,16 +159,13 @@ async def add_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 photo_type=None,
             )
 
-            await query.message.reply_text("Объявление создано")
-
-            await send_menu(update, context)
+            await query.message.reply_text("Объявление создано\n/list\n/my")
 
             context.user_data.clear()
             if dorm:
                 context.user_data["dorm"] = dorm
 
             return ConversationHandler.END
-
 
     # ---------- текст skip ----------
     elif update.message and update.message.text:
@@ -180,10 +184,7 @@ async def add_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
 
             await update.message.reply_text("Фото пропущено")
-            await update.message.reply_text("Объявление создано")
-
-            await send_menu(update, context)
-
+            await update.message.reply_text("Объявление создано\n/list\n/my")
 
             context.user_data.clear()
             if dorm:
@@ -232,10 +233,7 @@ async def add_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo_type=photo_type,
     )
 
-    await update.message.reply_text("Объявление создано")
-
-    await send_menu(update, context)
-
+    await update.message.reply_text("Объявление создано\n/list\n/my")
 
     dorm = context.user_data.get("dorm")
     context.user_data.clear()
@@ -298,10 +296,6 @@ async def my_ads(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text(text + "\n(без фото)")
 
-        
-    await send_menu(update, context)
-
-
 
 
 # ================= LIST =================
@@ -339,9 +333,6 @@ async def list_listings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text(text + "\n(без фото)")
 
-    await send_menu(update, context)
-
-
 
 
 # ================= DELETE =================
@@ -365,8 +356,6 @@ async def delete_listing(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         l.delete_instance()
         await update.message.reply_text(f"Объявление #{lid} удалено.")
-        await send_menu(update, context)
-
     except Listing.DoesNotExist:
         await update.message.reply_text("Не найдено, уже удалено или не ваше.")
 
@@ -396,50 +385,6 @@ async def buy_listing(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Listing.DoesNotExist:
         await update.message.reply_text("Не найдено, уже продано или не ваше.")
 
-    await send_menu(update, context)
-
-
-
-async def send_menu(update, context):
-
-    keyboard = [
-        [KeyboardButton("➕ Создать"), KeyboardButton("📋 Все")],
-        [KeyboardButton("👤 Мои"), KeyboardButton("♻ Сменить общагу")],
-        [KeyboardButton("ℹ Помощь")],
-    ]
-
-    markup = ReplyKeyboardMarkup(
-        keyboard,
-        resize_keyboard=True
-    )
-
-
-    text = "Выберите действие:"
-
-    if update.message:
-        await update.message.reply_text(text, reply_markup=markup)
-
-    elif update.callback_query:
-        await update.callback_query.message.reply_text(text, reply_markup=markup)
-
-async def menu_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    text = update.message.text
-
-    if text == "➕ Создать":
-        return await add_start(update, context)
-
-    elif text == "📋 Все":
-        return await list_listings(update, context)
-
-    elif text == "👤 Мои":
-        return await my_ads(update, context)
-
-    elif text == "♻ Сменить общагу":
-        return await change_dorm(update, context)
-
-    elif text == "ℹ Помощь":
-        return await info_command(update, context)
 
 
 
@@ -460,5 +405,3 @@ async def info_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Готовы? /start!"
     )
     await update.message.reply_text(text)
-
-    await send_menu(update, context)

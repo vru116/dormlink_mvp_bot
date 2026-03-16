@@ -12,6 +12,12 @@ __pycache__/
 *.so
 .Python
 
+handlers.py
+handlers1.py
+main.py
+main1.py
+
+
 # Дистрибутивы / пакеты
 dist/
 build/
